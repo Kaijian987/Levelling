@@ -53,11 +53,11 @@ let startstations = {
 };
 
 let reducedList = {
-    "route1": [59.413, 60.095, 61.408, 62.264, 62.7, 63.5, 64.183, 64.383, 65.244, 66.477, 67.575, 69.203, 70.942, 72.422, 73.348, 74.978, 76.048, 75.549, 76.286, 75.617, 74.376, 73.414, 73.488, 75.102, 76.022, 76.657, 76.276, 75.551, 74.64, 73.651],
-    "route2": [59.413, 60.095, 61.412, 60.04, 59.74, 59.48, 58.899, 58.394, 58.063, 59.02, 60.479, 61.221, 61.511, 61.855, 62.127, 62.423, 62.858, 63.308, 64.597, 65.979, 67.823, 68.913, 70.351, 73.609, 77.679, 81.687, 85.698, 89.78, 92.386, 90.876, 86.956, 82.869, 79.8, 77.397, 74.455],
-    "route3": [75.555, 76.055, 74.984, 73.359, 72.428, 70.951, 69.209, 67.583, 66.481, 65.248, 64.386, 64.187, 63.505, 62.706, 62.271, 61.414, 60.042, 59.742, 59.482, 58.901, 58.396, 58.065, 59.022, 60.481, 61.223, 61.513, 61.857, 62.129, 62.425, 62.86, 63.31, 64.599, 65.981, 65.25, 64.939],
-    "route4": [71.601, 68.81, 68.13, 69.538, 69.678, 68.429, 66.854, 66.071, 67.109, 68.395, 69.329, 70.754, 71.905, 72.635, 72.804, 72.554, 72.444, 72.998, 74.156, 75.146, 76.134, 76.956, 76.897, 76.806, 76.326, 75.914, 75.742, 75.409, 75.875, 76.7, 77.699, 78.379, 78.401, 77.53, 77.069, 74.996, 74.418, 74.47],
-    "route5": [73.654, 74.147, 75.136, 76.124, 76.949, 76.889, 76.798, 76.318, 75.905, 75.734, 75.401, 75.872, 76.695, 77.695, 78.375, 78.399, 77.527, 77.066, 74.99, 74.412, 74.463, 77.795, 79.809, 82.878, 86.962, 90.881, 92.391, 89.784, 85.703, 81.693, 77.687, 73.618, 70.361, 68.923, 67.834, 65.988, 65.257, 64.946]
+    "route1": [59.413,60.095,61.408,62.264,62.7,63.5,64.183,64.383,65.244,66.477,67.575,69.203,70.942,72.422,73.348,74.978,76.048,75.549,76.286,75.617,74.376,73.414,73.488,75.102,76.022,76.657,76.276,75.551,74.64,73.651],
+    "route2": [59.413,60.095,61.412,60.04,59.74,59.48,58.899,58.394,58.063,59.02,60.479,61.221,61.511,61.855,62.127,62.423,62.858,63.308,64.597,65.979,67.823,68.913,70.351,73.609,77.679,81.687,85.698,89.78,92.386,90.876,86.956,82.869,79.8,77.397,74.455],
+    "route3": [75.555, 76.055, 74.986, 73.355, 72.430, 70.951, 69.213, 67.583, 66.485, 65.246, 64.377, 64.186, 63.505, 62.706, 62.271, 61.414, 60.042, 59.742, 59.482, 58.901, 58.396, 58.065, 59.022, 60.481, 61.223, 61.513, 61.857, 62.129, 62.425, 62.86, 63.31, 64.599, 65.981, 65.25, 64.939],
+    "route4": [71.601,68.81,68.13,69.538,69.678,68.429,66.854,66.071,67.109,68.395,69.329,70.754,71.905,72.635,72.804,72.554,72.444,72.998,74.156,75.146,76.134,76.956,76.897,76.806,76.326,75.914,75.742,75.409,75.875,76.7,77.699,78.379,78.401,77.53,77.069,74.996,74.418,74.47],
+    "route5": [73.654,74.147,75.136,76.124,76.949,76.889,76.798,76.318,75.905,75.734,75.401,75.872,76.695,77.695,78.375,78.399,77.527,77.066,74.99,74.412,74.463,77.795,79.809,82.878,86.962,90.881,92.391,89.784,85.703,81.693,77.687,73.618,70.361,68.923,67.834,65.988,65.257,64.946]
 };
 
 let reducedName = {
@@ -90,6 +90,17 @@ let selectedRoute = reducedList["route1"];
 let selectedName = reducedName["route1"];
 let lastRL = 0;
 
+
+// -----------PREDICT FORESIGHT -------
+
+function PredictForesight(){
+    let tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
+    let backsightReading = parseFloat(document.getElementById("backsightInput").value);
+    let foresightNumber = tableBody.rows.length
+    let estimatedFS = backsightReading -selectedRoute[foresightNumber] + selectedRoute[foresightNumber-1];
+    document.getElementById("foresightInput").placeholder = estimatedFS.toFixed(3);
+    
+}
 // ---------- PREVIEW RESULT ----------
 function calculateResult() {
 
@@ -171,6 +182,8 @@ function confirmEntry() {
     // Reset inputs & preview
     previewData = null;
     document.getElementById("backsightInput").value = "";
+    document.getElementById("BSText").innerText = selectedName[tableBody.rows.length-1];
+    document.getElementById("FSText").innerText = selectedName[tableBody.rows.length];
     document.getElementById("foresightInput").value = "";
     document.getElementById("CurrentResult").innerText = "Calculated results will be shown here";
     document.getElementById("backsightInput").focus();
@@ -193,6 +206,9 @@ function addFirstRow() {
     const tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
     const startRL = startstations[station];
 
+    document.getElementById("BSText").innerText = selectedName[0]
+    document.getElementById("FSText").innerText = selectedName[1]
+  
     if (tableBody.rows.length === 0) {
         // Table empty → add first row
         entryCount = 1;
@@ -216,4 +232,13 @@ function addFirstRow() {
         firstRow.cells[7].innerText = selectedName[0];
         lastRL = startRL;
     }
+}
+
+// ---------- EXPORT TABLE----------
+function exportToExcel() {
+    let table = document.getElementById("fieldbookTable");
+    let wb = XLSX.utils.book_new();
+    let ws = XLSX.utils.table_to_sheet(table);
+    XLSX.utils.book_append_sheet(wb, ws, "Fieldbook");
+    XLSX.writeFile(wb, "fieldbook.xlsx");
 }

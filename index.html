@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Levelling by Kai Jian</title>
   <link rel="stylesheet" href="main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body class="dark-theme">
@@ -22,11 +23,27 @@
     <option value="route5">Route 5</option>
   </select>
 
-  <div id="UserInput">
-    <label>Backsight <input id="backsightInput" class="user_input" type="number" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]"></label>
-    <label>Foresight <input id="foresightInput" class="user_input" type="number" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]"></label>
-    <button onclick="calculateResult()" type="button">Calculate</button>
+<div id="UserInput">
+  <div>
+    <label for="backsightInput">Backsight</label>
+    <span id="BSText">Station Name</span>
+    <input id="backsightInput" class="user_input" type="number" 
+           inputmode="decimal" step="any" 
+           onchange="PredictForesight()">
+    
   </div>
+
+  <div>
+    <label for="foresightInput">Foresight</label>
+     <span id="FSText">Station Name</span>
+    <input id="foresightInput" class="user_input" type="number" 
+           inputmode="decimal" step="any" 
+           onchange="calculateResult()">
+   
+  </div>
+
+  <button onclick="calculateResult()" type="button">Calculate</button>
+</div>
 
   <div id="Calculation">
     <h3 id="CurrentResult">Current Result</h3>
@@ -66,6 +83,8 @@
     <button id="resetBtn" onclick="localStorage.removeItem('fieldbookData'); location.reload();">
       🔄 Reset Fieldbook
     </button>
+
+    <button onclick="exportToExcel()" type="button">Export to Excel</button>
   </div>
 
   <script src="app.js"></script>
