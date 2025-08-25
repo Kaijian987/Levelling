@@ -2,33 +2,74 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Levelling by Kai JIan</title>
-    <link rel="stylesheet" href="main.css">
-
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Levelling by Kai Jian</title>
+  <link rel="stylesheet" href="main.css">
 </head>
 
 <body class="dark-theme">
 
-    <p id="Levelling By Kai Jian"></p>
-    <div id="UserInput">
-        <input id = "backsightInput" class="user_input" type="number"> Backsight </input>
+  <h2>Levelling by Kai Jian</h2>
 
-        <input id = "foresightInput" class="UserInput" type = "number"> Foresight </input>
+  <select id="station">
+    <option value="">-- Select Route --</option>
+    <option value="route1">Route 1</option>
+    <option value="route2">Route 2</option>
+    <option value="route3">Route 3</option>
+    <option value="route4">Route 4</option>
+    <option value="route5">Route 5</option>
+  </select>
 
-        <button onclick="calculateResult()" type="button">Calculate</button>
+  <div id="UserInput">
+    <label>Backsight <input id="backsightInput" class="user_input" type="number"></label>
+    <label>Foresight <input id="foresightInput" class="user_input" type="number"></label>
+    <button onclick="calculateResult()" type="button">Calculate</button>
+  </div>
+
+  <div id="Calculation">
+    <h3 id="CurrentResult">Current Result</h3>
+    <p><strong>Backsight:</strong> <span id="previewBacksight">-</span></p>
+    <p><strong>Foresight:</strong> <span id="previewForesight">-</span></p>
+    <p><strong>Result:</strong> <span id="previewResult">-</span></p>
+    <p><strong>Reduced Level:</strong> <span id="previewRL">-</span></p>
+    <p><strong>Expected Level:</strong> <span id="previewExpected">-</span></p>
+    <p><strong>Difference:</strong> <span id="previewDiff">-</span></p>
+    <p><strong>Station Name:</strong> <span id="previewStation">-</span></p>
+
+    <button onclick="confirmEntry()" type="button">Add to Fieldbook</button>
+  </div>
+
+  <div id="Fieldbook">
+    <h3>Fieldbook</h3>
+    <div class="table-wrapper">
+      <table id="fieldbookTable" border="1" cellpadding="5">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Backsight</th>
+            <th>Foresight</th>
+            <th>Result</th>
+            <th>Reduced Level</th>
+            <th>Expected Level</th>
+            <th>Difference</th>
+            <th>Station Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- New entries will be added here -->
+        </tbody>
+      </table>
     </div>
 
-    <div id="Calculation">Results
-        <p id = "CurrentResult"> Calculated Results will be shown here</p>
-    </div>
+    <button id="resetBtn" onclick="localStorage.removeItem('fieldbookData'); location.reload();">
+      🔄 Reset Fieldbook
+    </button>
+  </div>
 
-
-
-    <script src="src= app.js"></script>
-    <noscript>You need to enable JS to view the full site</noscript>
+  <script src="app.js"></script>
+  <noscript>You need to enable JS to view the full site</noscript>
 </body>
 
 </html>
