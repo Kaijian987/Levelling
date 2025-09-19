@@ -54,9 +54,31 @@ button:hover {
   background: #45a049;
 }
 
+#undoBtn {
+  background: #808A93;
+  display: inline-block;
+  width: 49%;
+}
+
+#undoBtn:hover {
+  background: #3B3F44;
+}
+
+#redoBtn {
+  background: #808A93;
+    display: inline-block;
+  width: 49%;
+}
+
+#redoBtn:hover {
+  background: #3B3F44;
+}
+
 #resetBtn {
   background: #f44336;
 }
+
+
 
 #resetBtn:hover {
   background: #d32f2f;

@@ -27,18 +27,20 @@
   <div>
     <label for="backsightInput">Backsight</label>
     <span id="BSText">Station Name</span>
-    <input id="backsightInput" class="user_input" type="number" 
-           inputmode="decimal" step="any" 
-           onchange="PredictForesight()">
+      <input id="backsightInput" class="user_input" type="text"
+       inputmode="numeric"
+       onblur="autoFormatOnBlur(this); PredictForesight()"
+       oninput="PredictForesight()">
     
   </div>
 
   <div>
     <label for="foresightInput">Foresight</label>
      <span id="FSText">Station Name</span>
-    <input id="foresightInput" class="user_input" type="number" 
-           inputmode="decimal" step="any" 
-           onchange="calculateResult()">
+      <input id="foresightInput" class="user_input" type="text"
+       inputmode="numeric"
+       onblur="autoFormatOnBlur(this); calculateResult()"
+       oninput="calculateResult()">
    
   </div>
 
@@ -56,6 +58,8 @@
     <p><strong>Station Name:</strong> <span id="previewStation">-</span></p>
 
     <button onclick="confirmEntry()" type="button">Add to Fieldbook</button>
+    <button id ="undoBtn" onclick="undoEntry()" type="button">Undo</button>
+    <button id="redoBtn" onclick="redoEntry()" type="button">Redo</button>
   </div>
 
   <div id="Fieldbook">

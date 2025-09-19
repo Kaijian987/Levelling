@@ -1,3 +1,5 @@
+
+// ------------------ RESTORE ON LOAD ------------------
 window.onload = function () {
     let storedData = localStorage.getItem("fieldbookData");
     if (storedData) {
@@ -12,16 +14,14 @@ window.onload = function () {
             });
         });
 
-        // Restore entryCount from last row
+        // Restore entryCount & lastRL
         if (tableBody.rows.length > 0) {
             let lastRowNo = parseInt(tableBody.rows[tableBody.rows.length - 1].cells[0].innerText);
             entryCount = isNaN(lastRowNo) ? 0 : lastRowNo;
-
-            // Restore lastRL too
             lastRL = parseFloat(tableBody.rows[tableBody.rows.length - 1].cells[4].innerText);
         }
     }
-}
+};
 
 function saveTableToStorage() {
     let tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
@@ -38,12 +38,13 @@ function saveTableToStorage() {
     localStorage.setItem("fieldbookData", JSON.stringify(data));
 }
 
+// ------------------ GLOBAL VARS ------------------
 document.getElementById("station").addEventListener("change", function () {
     addFirstRow();
 });
 
-let entryCount = 0; // Keep track of row numbers
-let previewData = null; // Temp storage for preview
+
+
 let startstations = {
     "route1": 59.413,
     "route2": 59.413,
@@ -51,6 +52,7 @@ let startstations = {
     "route4": 71.601,
     "route5": 73.654
 };
+
 
 let reducedList = {
     "route1": [59.413, 60.095, 61.408, 62.264, 62.7, 63.501, 64.184, 64.384, 65.245, 66.478, 67.576, 69.204, 70.943, 72.423, 73.349, 74.98, 76.05, 75.551, 76.288, 75.619, 74.378, 73.416, 73.49, 75.104, 76.024, 76.66, 76.279, 75.554, 74.643, 73.654],
@@ -109,26 +111,41 @@ let reducedName = {
     ]
 };
 
+let entryCount = 0;
+let previewData = null;
 let selectedRoute = reducedList["route1"];
 let selectedName = reducedName["route1"];
 let lastRL = 0;
+let undoStack = [];
+let redoStack = [];
 
+// ------------------ HELPERS ------------------
+function updateStationLabels() {
+    const len = document.getElementById("fieldbookTable").querySelector("tbody").rows.length;
+    document.getElementById("BSText").innerText = selectedName[len - 1] || "-";
+    document.getElementById("FSText").innerText = selectedName[len] || "-";
+}
 
-// -----------PREDICT FORESIGHT -------
-
+// ------------------ PREDICT FS ------------------
 function PredictForesight() {
     let tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
     let backsightReading = parseFloat(document.getElementById("backsightInput").value);
-    let foresightNumber = tableBody.rows.length
+    let foresightNumber = tableBody.rows.length;
+
+    if (isNaN(backsightReading) || foresightNumber === 0) return;
+
     let estimatedFS = backsightReading - selectedRoute[foresightNumber] + selectedRoute[foresightNumber - 1];
     document.getElementById("foresightInput").placeholder = estimatedFS.toFixed(3);
-
 }
-// ---------- PREVIEW RESULT ----------
-function calculateResult() {
 
+// ------------------ PREVIEW RESULT ------------------
+function calculateResult() {
     let tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
-    let previousRow = tableBody.rows[tableBody.rows.length - 1]; // last row
+
+    if (tableBody.rows.length === 0) {
+        document.getElementById("CurrentResult").innerText = "⚠️ Please select a route first.";
+        return;
+    }
 
     let backsightReading = parseFloat(document.getElementById("backsightInput").value);
     let foresightReading = parseFloat(document.getElementById("foresightInput").value);
@@ -142,27 +159,22 @@ function calculateResult() {
     let resultText = result < 0 ? `Fall ${(-result).toFixed(3)}` : `Rise ${result.toFixed(3)}`;
     document.getElementById("CurrentResult").innerText = resultText;
 
-    // Store preview data
-    previewData = {
-        backsight: backsightReading,
-        foresight: foresightReading,
-        result: result
-    };
+    previewData = { backsight: backsightReading, foresight: foresightReading, result: result };
 
-    // // Show preview buttons
-    // document.getElementById("PreviewActions").style.display = "block";
-
-    // Use last RL from the table
+    let previousRow = tableBody.rows[tableBody.rows.length - 1];
     let previousRL = parseFloat(previousRow.cells[4].innerText);
 
-    // Get expected + station for NEXT row
     let expected = selectedRoute[tableBody.rows.length];
     let stationName = selectedName[tableBody.rows.length];
 
     let newRL = previousRL + result;
     let difference = newRL - expected;
 
-    // Update Current Result preview
+    if (Math.abs(difference)>0.005){
+        document.getElementById("previewDiff").style.color = 'red';
+    } else{
+        document.getElementById("previewDiff").style.color = 'green';
+    }
     document.getElementById("previewBacksight").innerText = backsightReading.toFixed(3);
     document.getElementById("previewForesight").innerText = foresightReading.toFixed(3);
     document.getElementById("previewResult").innerText = result.toFixed(3);
@@ -172,68 +184,54 @@ function calculateResult() {
     document.getElementById("previewStation").innerText = stationName;
 }
 
-// ---------- CONFIRM ENTRY ----------
+// ------------------ CONFIRM ENTRY ------------------
 function confirmEntry() {
     if (!previewData) return;
 
-    entryCount++;
     let tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
-    let previousRow = tableBody.rows[tableBody.rows.length - 1]; // last row
+    let previousRow = tableBody.rows[tableBody.rows.length - 1];
 
-    // Update previous row's backsight
+    entryCount++;
     previousRow.cells[1].innerText = previewData.backsight.toFixed(3);
 
-    // Insert new row
     let newRow = tableBody.insertRow();
     newRow.insertCell(0).innerText = entryCount;
-    newRow.insertCell(1).innerText = "";
+    newRow.insertCell(1).innerText = "-";
     newRow.insertCell(2).innerText = previewData.foresight.toFixed(3);
     newRow.insertCell(3).innerText = previewData.result.toFixed(3);
 
-    // Reduced Level
-    let previousRL = previousRow ? parseFloat(previousRow.cells[4].innerText) : 0;
+    let previousRL = parseFloat(previousRow.cells[4].innerText);
     let currentRL = previousRL + previewData.result;
     newRow.insertCell(4).innerText = currentRL.toFixed(3);
 
-    // Expected + Station Name
     let expected = selectedRoute[tableBody.rows.length - 1];
     let stationName = selectedName[tableBody.rows.length - 1];
     newRow.insertCell(5).innerText = expected.toFixed(3);
     newRow.insertCell(6).innerText = (currentRL - expected).toFixed(3);
     newRow.insertCell(7).innerText = stationName;
 
-    // Reset inputs & preview
     previewData = null;
+    lastRL = currentRL;
     document.getElementById("backsightInput").value = "";
-    document.getElementById("BSText").innerText = selectedName[tableBody.rows.length - 1];
-    document.getElementById("FSText").innerText = selectedName[tableBody.rows.length];
     document.getElementById("foresightInput").value = "";
     document.getElementById("CurrentResult").innerText = "Calculated results will be shown here";
     document.getElementById("backsightInput").focus();
 
+    updateStationLabels();
     saveTableToStorage();
 }
 
-// ---------- CANCEL PREVIEW ----------
-function cancelPreview() {
-    previewData = null;
-    document.getElementById("CurrentResult").innerText = "Cancelled";
-}
-
-// ---------- FIRST ROW ----------
+// ------------------ FIRST ROW ------------------
 function addFirstRow() {
     const station = document.getElementById("station").value;
     if (!station) return;
+
     selectedRoute = reducedList[station];
     selectedName = reducedName[station];
     const tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
     const startRL = startstations[station];
 
-    document.getElementById("BSText").innerText = selectedName[0]
-    document.getElementById("FSText").innerText = selectedName[1]
-
     if (tableBody.rows.length === 0) {
-        // Table empty → add first row
         entryCount = 1;
         lastRL = startRL;
         const newRow = tableBody.insertRow();
@@ -247,7 +245,6 @@ function addFirstRow() {
         newRow.insertCell(6).innerText = "0.000";
         newRow.insertCell(7).innerText = selectedName[0];
     } else {
-        // Table has values → update first row
         const firstRow = tableBody.rows[0];
         firstRow.cells[4].innerText = startRL.toFixed(3);
         firstRow.cells[5].innerText = startRL.toFixed(3);
@@ -255,13 +252,143 @@ function addFirstRow() {
         firstRow.cells[7].innerText = selectedName[0];
         lastRL = startRL;
     }
+
+    updateStationLabels();
 }
 
-// ---------- EXPORT TABLE----------
+// ------------------ UNDO ENTRY ------------------
+function undoEntry() {
+    const tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
+    const rowCount = tableBody.rows.length;
+
+    if (rowCount <= 1) {
+        document.getElementById("CurrentResult").innerText = "Nothing to undo.";
+        return;
+    }
+
+    // Save last row before deleting (for redo)
+    const lastRow = tableBody.rows[rowCount - 1];
+    let rowData = [];
+    for (let i = 0; i < lastRow.cells.length; i++) {
+        rowData.push(lastRow.cells[i].innerText);
+    }
+    undoStack.push(rowData);
+
+    // Delete last row
+    tableBody.deleteRow(rowCount - 1);
+
+    // Reset marker on new last row
+    const newLastRow = tableBody.rows[rowCount - 2];
+    newLastRow.cells[1].innerText = "-";
+
+    const lastNo = parseInt(newLastRow.cells[0].innerText);
+    entryCount = isNaN(lastNo) ? tableBody.rows.length : lastNo;
+    lastRL = parseFloat(newLastRow.cells[4].innerText);
+
+    previewData = null;
+    document.getElementById("backsightInput").value = "";
+    document.getElementById("foresightInput").value = "";
+    document.getElementById("CurrentResult").innerText = "Last entry undone.";
+    document.getElementById("backsightInput").focus();
+
+    updateStationLabels();
+    saveTableToStorage();
+}
+
+// ------------------ REDO ENTRY ------------------
+function redoEntry() {
+    const tableBody = document.getElementById("fieldbookTable").querySelector("tbody");
+
+    if (undoStack.length === 0) {
+        document.getElementById("CurrentResult").innerText = "Nothing to redo.";
+        return;
+    }
+
+    // Get last undone row
+    const rowData = undoStack.pop();
+
+    // Insert row back at the end
+    let newRow = tableBody.insertRow();
+    rowData.forEach((cellData, idx) => {
+        let newCell = newRow.insertCell(idx);
+        newCell.innerText = cellData;
+    });
+
+    // Update entry count and RL
+    const lastNo = parseInt(newRow.cells[0].innerText);
+    entryCount = isNaN(lastNo) ? tableBody.rows.length : lastNo;
+    lastRL = parseFloat(newRow.cells[4].innerText);
+
+    previewData = null;
+    document.getElementById("backsightInput").value = "";
+    document.getElementById("foresightInput").value = "";
+    document.getElementById("CurrentResult").innerText = "Last entry redone.";
+    document.getElementById("backsightInput").focus();
+
+    updateStationLabels();
+    saveTableToStorage();
+}
+
+// ------------------ EXPORT ------------------
 function exportToExcel() {
     let table = document.getElementById("fieldbookTable");
     let wb = XLSX.utils.book_new();
     let ws = XLSX.utils.table_to_sheet(table);
     XLSX.utils.book_append_sheet(wb, ws, "Fieldbook");
     XLSX.writeFile(wb, "fieldbook.xlsx");
+}
+
+//AUTO FORMAT INPUT
+function autoFormatInput(inputEl) {
+    let raw = inputEl.value.replace(/[^0-9.]/g, ""); // keep only digits and decimal
+    if (!raw) {
+        inputEl.value = "";
+        return;
+    }
+
+    let num = parseFloat(raw);
+    if (isNaN(num)) {
+        inputEl.value = "";
+        return;
+    }
+
+    // If user typed without decimal, treat as /1000
+    if (!raw.includes(".") && num > 0) {
+        num = num / 1000;
+    }
+
+    // Format to 3 decimal places
+    let formatted = num.toFixed(3);
+
+    // Only update if changed
+    if (inputEl.value !== formatted) {
+        inputEl.value = formatted;
+
+        // Put cursor at the end
+        let cursorPos = formatted.length;
+        inputEl.setSelectionRange(cursorPos, cursorPos);
+
+        // 🔥 Force trigger an input event so linked functions re-run
+        inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+}
+
+function autoFormatOnBlur(inputEl) {
+    let raw = inputEl.value.replace(/[^0-9.]/g, "");
+    if (!raw) {
+        inputEl.value = "";
+        return;
+    }
+
+    let num = parseFloat(raw);
+    if (isNaN(num)) {
+        inputEl.value = "";
+        return;
+    }
+
+    if (!raw.includes(".") && num > 100) {
+        num = num / 1000;
+    }
+
+    inputEl.value = num.toFixed(3);
 }
